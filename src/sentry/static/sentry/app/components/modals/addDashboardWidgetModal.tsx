@@ -24,14 +24,22 @@ import {generateFieldOptions} from 'app/views/eventsV2/utils';
 import SelectField from 'app/views/settings/components/forms/selectField';
 import TextField from 'app/views/settings/components/forms/textField';
 
-type Props = ModalRenderProps & {
-  api: Client;
+// forwarded from src/sentry/static/sentry/app/actionCreators/modal.tsx
+type DashboardWidgetModalOptions = {
   organization: Organization;
   dashboard: DashboardListItem;
-  selection: GlobalSelection;
+  widget?: Widget;
   onAddWidget: (data: Widget) => void;
-  tags: TagCollection;
+  onUpdateWidget?: (nextWidget: Widget) => void;
 };
+
+type Props = ModalRenderProps &
+  DashboardWidgetModalOptions & {
+    api: Client;
+    organization: Organization;
+    selection: GlobalSelection;
+    tags: TagCollection;
+  };
 
 type ValidationError = {
   [key: string]: string[] | ValidationError[] | ValidationError;
@@ -76,19 +84,44 @@ function mapErrors(
 }
 
 class AddDashboardWidgetModal extends React.Component<Props, State> {
-  state: State = {
-    title: '',
-    displayType: 'line',
-    interval: '5m',
-    queries: [{...newQuery}],
-    errors: undefined,
-    loading: false,
-  };
+  constructor(props: Props) {
+    super(props);
+
+    const {widget} = props;
+
+    if (!widget) {
+      this.state = {
+        title: '',
+        displayType: 'line',
+        interval: '5m',
+        queries: [{...newQuery}],
+        errors: undefined,
+        loading: false,
+      };
+      return;
+    }
+
+    this.state = {
+      title: widget.title,
+      displayType: widget.displayType,
+      interval: widget.interval,
+      queries: widget.queries,
+      errors: undefined,
+      loading: false,
+    };
+  }
 
   handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const {api, closeModal, organization, onAddWidget} = this.props;
+    const {
+      api,
+      closeModal,
+      organization,
+      onAddWidget,
+      onUpdateWidget,
+      widget: previousWidget,
+    } = this.props;
     this.setState({loading: true});
     try {
       const widgetData: Widget = pick(this.state, [
@@ -98,8 +131,18 @@ class AddDashboardWidgetModal extends React.Component<Props, State> {
         'queries',
       ]);
       await validateWidget(api, organization.slug, widgetData);
-      onAddWidget(widgetData);
-      addSuccessMessage(t('Added widget.'));
+
+      if (typeof onUpdateWidget === 'function' && !!previousWidget) {
+        onUpdateWidget({
+          id: previousWidget?.id,
+          ...widgetData,
+        });
+        addSuccessMessage(t('Updated widget.'));
+      } else {
+        onAddWidget(widgetData);
+        addSuccessMessage(t('Added widget.'));
+      }
+
       closeModal();
     } catch (err) {
       const errors = mapErrors(err?.responseJSON ?? {}, {});
@@ -147,7 +190,17 @@ class AddDashboardWidgetModal extends React.Component<Props, State> {
   };
 
   render() {
-    const {Body, Header, api, closeModal, organization, selection, tags} = this.props;
+    const {
+      Body,
+      Header,
+      api,
+      closeModal,
+      organization,
+      selection,
+      tags,
+      onUpdateWidget,
+      widget: previousWidget,
+    } = this.props;
     const state = this.state;
     const errors = state.errors;
 
@@ -158,10 +211,12 @@ class AddDashboardWidgetModal extends React.Component<Props, State> {
       measurementKeys: [],
     });
 
+    const isUpdatingWidget = typeof onUpdateWidget === 'function' && !!previousWidget;
+
     return (
       <React.Fragment>
         <Header closeButton onHide={closeModal}>
-          {t('Add Widget')}
+          {t(isUpdatingWidget ? 'Edit Widget' : 'Add Widget')}
         </Header>
         <Body>
           <form>
@@ -238,6 +293,9 @@ class AddDashboardWidgetModal extends React.Component<Props, State> {
                   organization={organization}
                   selection={selection}
                   widget={this.state}
+                  isEditing={false}
+                  onDelete={() => undefined}
+                  onEdit={() => undefined}
                 />
               </PanelItem>
             </Panel>
@@ -250,7 +308,7 @@ class AddDashboardWidgetModal extends React.Component<Props, State> {
                 disabled={state.loading}
                 busy={state.loading}
               >
-                {t('Add Widget')}
+                {t(isUpdatingWidget ? 'Update Widget' : 'Add Widget')}
               </Button>
             </FooterButtons>
           </form>
