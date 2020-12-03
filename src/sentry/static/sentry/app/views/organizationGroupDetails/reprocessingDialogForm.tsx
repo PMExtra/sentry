@@ -39,7 +39,7 @@ type State = {
   isFormInvalid: boolean;
 };
 
-class ReprocessingForm extends React.Component<Props, State> {
+class ReprocessingDialogForm extends React.Component<Props, State> {
   state: State = {
     isFormInvalid: true,
   };
@@ -105,7 +105,7 @@ class ReprocessingForm extends React.Component<Props, State> {
   }
 }
 
-export default ReprocessingForm;
+export default ReprocessingDialogForm;
 
 const Introduction = styled('p')`
   font-size: ${p => p.theme.fontSizeLarge};
