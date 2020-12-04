@@ -809,8 +809,14 @@ type GroupFiltered = {
   userCount: number;
 };
 
+export type GroupStats = GroupFiltered & {
+  lifetime?: GroupFiltered;
+  filtered: GroupFiltered | null;
+  id: string;
+};
+
 // TODO(ts): incomplete
-export type Group = GroupFiltered & {
+export type BaseGroup = {
   id: string;
   latestEvent: Event;
   activity: any[]; // TODO(ts)
@@ -846,11 +852,11 @@ export type Group = GroupFiltered & {
   type: EventOrGroupType;
   userReportCount: number;
   subscriptionDetails: {disabled?: boolean; reason?: string} | null;
-  filtered: GroupFiltered | null;
-  lifetime?: any; // TODO(ts)
   inbox?: InboxDetails | null;
   owners?: SuggestedOwner[] | null;
 };
+
+export type Group = BaseGroup & GroupStats;
 
 export type GroupTombstone = {
   id: string;
