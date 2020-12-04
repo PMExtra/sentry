@@ -2,7 +2,6 @@ import React from 'react';
 import styled from '@emotion/styled';
 
 import {ModalRenderProps, openModal} from 'app/actionCreators/modal';
-import ButtonBar from 'app/components/buttonBar';
 import Feature from 'app/components/acl/feature';
 import FeatureDisabled from 'app/components/acl/featureDisabled';
 import Button from 'app/components/button';
@@ -46,7 +45,7 @@ function DeleteAction({project, organization, onDiscard, onDelete}: Props) {
             <Body>
               {!hasFeature &&
                 typeof renderDisabled === 'function' &&
-                renderDisabled({...props, hasFeature})}
+                renderDisabled({...props, hasFeature, children: null})}
               {t(
                 `Discarding this event will result in the deletion of most data associated with this issue and future events being discarded before reaching your stream. Are you sure you wish to continue?`
               )}
@@ -76,7 +75,7 @@ function DeleteAction({project, organization, onDiscard, onDelete}: Props) {
   }
 
   return (
-    <ButtonBar className="btn-group">
+    <div className="btn-group">
       <LinkWithConfirmation
         className="group-remove btn btn-default btn-sm"
         title={t('Delete')}
@@ -94,7 +93,7 @@ function DeleteAction({project, organization, onDiscard, onDelete}: Props) {
           <span>{t('Delete and discard future events')}</span>
         </MenuItem>
       </DropdownLink>
-    </ButtonBar>
+    </div>
   );
 }
 

@@ -87,7 +87,7 @@ class Actions extends React.Component<Props, State> {
     return discoverView.getResultsViewUrlTarget(organization.slug);
   }
 
-  onDelete() {
+  onDelete = () => {
     const {group, project, organization, api} = this.props;
 
     addLoadingMessage(t('Delete event\u2026'));
@@ -106,11 +106,11 @@ class Actions extends React.Component<Props, State> {
         },
       }
     );
-  }
+  };
 
-  onUpdate(
+  onUpdate = (
     data: {isBookmarked: boolean} | {isSubscribed: boolean} | UpdateResolutionStatus
-  ) {
+  ) => {
     const {group, project, organization, api} = this.props;
 
     addLoadingMessage(t('Saving changes\u2026'));
@@ -126,9 +126,9 @@ class Actions extends React.Component<Props, State> {
         complete: clearIndicators,
       }
     );
-  }
+  };
 
-  onReprocess() {
+  onReprocess = () => {
     const {group, organization} = this.props;
     openModal(({closeModal, Header, Body}) => (
       <ReprocessingForm
@@ -139,7 +139,7 @@ class Actions extends React.Component<Props, State> {
         Body={Body}
       />
     ));
-  }
+  };
 
   onShare(shared: boolean) {
     const {group, project, organization, api} = this.props;
@@ -166,20 +166,19 @@ class Actions extends React.Component<Props, State> {
       }
     );
   }
-
-  onToggleShare() {
+  onToggleShare = () => {
     this.onShare(!this.props.group.isPublic);
-  }
+  };
 
-  onToggleBookmark() {
+  onToggleBookmark = () => {
     this.onUpdate({isBookmarked: !this.props.group.isBookmarked});
-  }
+  };
 
-  onToggleSubscribe() {
+  onToggleSubscribe = () => {
     this.onUpdate({isSubscribed: !this.props.group.isSubscribed});
-  }
+  };
 
-  onDiscard() {
+  onDiscard = () => {
     const {group, project, organization, api} = this.props;
     const id = uniqueId();
     addLoadingMessage(t('Discarding event\u2026'));
@@ -198,7 +197,7 @@ class Actions extends React.Component<Props, State> {
       },
       complete: clearIndicators,
     });
-  }
+  };
 
   render() {
     const {group, project, organization} = this.props;
@@ -209,7 +208,7 @@ class Actions extends React.Component<Props, State> {
 
     const buttonClassName = 'btn btn-default btn-sm';
     const bookmarkTitle = isBookmarked ? t('Remove bookmark') : t('Bookmark');
-    const hasRelease = project.features?.includes('releases');
+    const hasRelease = !!project.features?.includes('releases');
 
     const isResolved = status === 'resolved';
     const isIgnored = status === 'ignored';
