@@ -1786,10 +1786,15 @@ export type InternetProtocol = {
   regionCode: string | null;
 };
 
+/**
+ * XXX(ts): This actually all comes from getsentry. We should definitely
+ * refactor this into a more proper 'hook' mechanism in the future
+ */
 export type AuthConfig = {
   canRegister: boolean;
   serverHostname: string;
   hasNewsletter: boolean;
   githubLoginLink: string;
   vstsLoginLink: string;
+  googleLoginLink: string;
 };

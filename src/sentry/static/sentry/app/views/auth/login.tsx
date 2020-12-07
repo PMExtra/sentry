@@ -1,12 +1,13 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import PropTypes from 'prop-types';
 
+import {Client} from 'app/api';
 import LoadingError from 'app/components/loadingError';
 import LoadingIndicator from 'app/components/loadingIndicator';
 import NavTabs from 'app/components/navTabs';
 import {t} from 'app/locale';
 import space from 'app/styles/space';
+import {AuthConfig} from 'app/types';
 import withApi from 'app/utils/withApi';
 
 import LoginForm from './loginForm';
@@ -17,25 +18,36 @@ const FORM_COMPONENTS = {
   login: LoginForm,
   register: RegisterForm,
   sso: SsoForm,
+} as const;
+
+type ActiveTab = keyof typeof FORM_COMPONENTS;
+
+type TabConfig = [key: ActiveTab, label: string, disabled?: boolean];
+
+type Props = {
+  api: Client;
 };
 
-class Login extends React.Component {
-  static propTypes = {
-    api: PropTypes.object,
-  };
+type State = {
+  loading: boolean;
+  error: null | boolean;
+  activeTab: ActiveTab;
+  authConfig: null | AuthConfig;
+};
 
-  state = {
+class Login extends React.Component<Props, State> {
+  state: State = {
     loading: true,
     error: null,
     activeTab: 'login',
-    authConfig: {},
+    authConfig: null,
   };
 
   componentDidMount() {
     this.fetchData();
   }
 
-  handleSetTab = (activeTab, event) => {
+  handleSetTab = (activeTab: ActiveTab, event: React.MouseEvent) => {
     this.setState({activeTab});
     event.preventDefault();
   };
@@ -62,23 +74,31 @@ class Login extends React.Component {
   };
 
   get hasAuthProviders() {
+    if (this.state.authConfig === null) {
+      return false;
+    }
+
     const {githubLoginLink, googleLoginLink, vstsLoginLink} = this.state.authConfig;
-    return githubLoginLink || vstsLoginLink || googleLoginLink;
+    return !!(githubLoginLink || vstsLoginLink || googleLoginLink);
   }
 
   render() {
     const {api} = this.props;
     const {loading, error, activeTab, authConfig} = this.state;
 
+    if (authConfig === null) {
+      return null;
+    }
+
     const FormComponent = FORM_COMPONENTS[activeTab];
 
-    const tabs = [
+    const tabs: TabConfig[] = [
       ['login', t('Login')],
       ['sso', t('Single Sign-On')],
       ['register', t('Register'), !authConfig.canRegister],
     ];
 
-    const renderTab = ([key, label, disabled]) =>
+    const renderTab = ([key, label, disabled]: TabConfig) =>
       !disabled && (
         <li key={key} className={activeTab === key ? 'active' : ''}>
           <a href="#" onClick={e => this.handleSetTab(key, e)}>
@@ -128,7 +148,7 @@ const AuthNavTabs = styled(NavTabs)`
   margin: 0;
 `;
 
-const FormWrapper = styled('div')`
+const FormWrapper = styled('div')<{hasAuthProviders: boolean}>`
   padding: 35px;
   width: ${p => (p.hasAuthProviders ? '600px' : '490px')};
 `;
