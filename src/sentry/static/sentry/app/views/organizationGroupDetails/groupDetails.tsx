@@ -138,14 +138,7 @@ class GroupDetails extends React.Component<Props, State> {
   }
 
   async fetchData() {
-    const {
-      environments,
-      api,
-      isGlobalSelectionReady,
-      params,
-      routes,
-      location,
-    } = this.props;
+    const {environments, api, isGlobalSelectionReady, params} = this.props;
 
     // Need to wait for global selection store to be ready before making request
     if (!isGlobalSelectionReady) {
@@ -163,19 +156,10 @@ class GroupDetails extends React.Component<Props, State> {
           ...(environments ? {environment: environments} : {}),
         },
       });
+
+      console.log('groupPromise', groupPromise);
       const [data] = await Promise.all([groupPromise, eventPromise]);
 
-      // TODO(billy): See if this is even in use and if not, can we just rip this out?
-      if (this.props.params.groupId !== data.id) {
-        ReactRouter.browserHistory.push(
-          recreateRoute('', {
-            routes,
-            location,
-            params: {...params, groupId: data.id},
-          })
-        );
-        return;
-      }
       const project = data.project;
       markEventSeen(api, params.orgId, project.slug, params.groupId);
 
@@ -198,7 +182,7 @@ class GroupDetails extends React.Component<Props, State> {
         ReactRouter.browserHistory.replace(locationWithProject);
       }
 
-      this.setState({project});
+      this.setState({project, group: data});
 
       GroupStore.loadInitialData([data]);
     } catch (err) {
@@ -343,6 +327,8 @@ class GroupDetails extends React.Component<Props, State> {
     const {organization} = this.props;
     const {error: isError, group, project, loading} = this.state;
     const isLoading = loading || (!group && !isError);
+
+    console.log('loading', !group);
 
     return (
       <DocumentTitle title={this.getTitle()}>

@@ -2,6 +2,7 @@ import React from 'react';
 import {browserHistory, RouteComponentProps} from 'react-router';
 import styled from '@emotion/styled';
 import isEqual from 'lodash/isEqual';
+import orderBy from 'lodash/orderBy';
 import PropTypes from 'prop-types';
 
 import {fetchSentryAppComponents} from 'app/actionCreators/sentryAppComponents';
@@ -12,6 +13,7 @@ import {withMeta} from 'app/components/events/meta/metaProxy';
 import GroupSidebar from 'app/components/group/sidebar';
 import LoadingIndicator from 'app/components/loadingIndicator';
 import MutedBox from 'app/components/mutedBox';
+import ReprocessedBox from 'app/components/reprocessedBox';
 import ResolutionBox from 'app/components/resolutionBox';
 import SentryTypes from 'app/sentryTypes';
 import {Environment, Event, Group, Organization, Project} from 'app/types';
@@ -163,7 +165,18 @@ class GroupEventDetails extends React.Component<Props, State> {
       eventError,
       onRetry,
     } = this.props;
+
     const evt = withMeta(event);
+
+    // Reprocessing
+    const hasReprocessingV2Feature = project.features?.includes('reprocessing-v2');
+    const {activity, statusDetails, status} = group;
+    // Most recent activity
+    const mostRecentActivity = orderBy(
+      [...activity],
+      ({dateCreated}) => new Date(dateCreated),
+      ['desc']
+    )[0];
 
     return (
       <div className={className}>
@@ -177,12 +190,18 @@ class GroupEventDetails extends React.Component<Props, State> {
                 location={location}
               />
             )}
-            {group.status === 'ignored' && (
-              <MutedBox statusDetails={group.statusDetails} />
+            {status === 'ignored' && <MutedBox statusDetails={statusDetails} />}
+            {status === 'resolved' && (
+              <ResolutionBox statusDetails={statusDetails} projectId={project.id} />
             )}
-            {group.status === 'resolved' && (
-              <ResolutionBox statusDetails={group.statusDetails} projectId={project.id} />
-            )}
+            {hasReprocessingV2Feature &&
+              status === 'reprocessing' &&
+              mostRecentActivity?.type === 'unresolved' && (
+                <ReprocessedBox
+                  reprocessActivity={mostRecentActivity}
+                  orgSlug={organization.slug}
+                />
+              )}
             {loadingEvent ? (
               <LoadingIndicator />
             ) : eventError ? (

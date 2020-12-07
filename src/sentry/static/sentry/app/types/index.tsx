@@ -819,6 +819,21 @@ export type SuggestedOwner = {
   date_added: string;
 };
 
+export type GroupActivityData = {
+  eventCount?: number;
+  newGroupId?: number;
+  oldGroupId?: number;
+  text?: string;
+};
+
+export type GroupActivity = {
+  data: GroupActivityData;
+  dateCreated: string;
+  id: string;
+  type: string;
+  user?: null | User;
+};
+
 type GroupFiltered = {
   count: string;
   stats: Record<string, TimeseriesValue[]>;
@@ -831,7 +846,7 @@ type GroupFiltered = {
 export type Group = GroupFiltered & {
   id: string;
   latestEvent: Event;
-  activity: any[]; // TODO(ts)
+  activity: GroupActivity[];
   annotations: string[];
   assignedTo: User;
   culprit: string;
@@ -857,7 +872,7 @@ export type Group = GroupFiltered & {
   seenBy: User[];
   shareId: string;
   shortId: string;
-  status: string;
+  status: 'reprocessing' | ResolutionStatus;
   statusDetails: ResolutionStatusDetails;
   tags: Pick<Tag, 'key' | 'name' | 'totalValues'>[];
   title: string;
