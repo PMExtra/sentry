@@ -29,7 +29,7 @@ const TogglableAddress = ({
   onToggle,
 }: Props) => {
   const convertAbsoluteAddressToRelative = () => {
-    if (!startingAddress) {
+    if (!startingAddress || relativeAddressMaxlength === undefined) {
       return '';
     }
 
